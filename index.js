@@ -31,7 +31,6 @@ app.use(express.json());
 app.use(express.static("public")); // Pour servir les fichiers statiques (ex: admin.html)
 
 // 🛢 Connexion à PostgreSQL (Render injecte DATABASE_URL automatiquement)
-const { Pool } = require("pg");
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false }, // important pour Render Postgres !
