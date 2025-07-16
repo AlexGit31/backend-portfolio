@@ -11,6 +11,7 @@ const PORT = process.env.PORT || 3000;
 const allowedOrigins = [
   "https://alexis-portfolio.com", // Ton site frontend en production
   "http://localhost:3000", // Pour développement local
+  "https://backend-portfolio-z3lg.onrender.com",
 ];
 
 app.use(
