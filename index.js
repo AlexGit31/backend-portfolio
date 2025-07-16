@@ -1,20 +1,40 @@
-require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const { Pool } = require("pg");
 
+// 📦 Création de l'application Express
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// 🔌 Middleware
-app.use(cors());
-app.use(express.json());
-app.use(express.static("public")); // Pour servir admin.html et autres fichiers
+// ✅ Configuration CORS
+const allowedOrigins = [
+  "https://alexis-portfolio.com", // Ton site frontend en production
+  "http://localhost:3000", // Pour développement local
+];
 
-// 🔗 Connexion à PostgreSQL
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS: " + origin));
+      }
+    },
+    methods: ["GET", "POST"],
+  }),
+);
+
+// 📄 Middleware
+app.use(express.json());
+app.use(express.static("public")); // Pour servir les fichiers statiques (ex: admin.html)
+
+// 🛢 Connexion à PostgreSQL (Render injecte DATABASE_URL automatiquement)
+const { Pool } = require("pg");
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }, // important pour Render Postgres !
 });
 
 // 🔹 Enregistrement d’une visite
@@ -35,7 +55,7 @@ app.post("/log", async (req, res) => {
   }
 });
 
-// 🔸 Tableau brut des visites (HTML simple)
+// 🔸 Page admin HTML simple
 app.get("/admin", async (req, res) => {
   try {
     const { rows } = await pool.query(
@@ -45,12 +65,13 @@ app.get("/admin", async (req, res) => {
     const tableRows = rows
       .map(
         (row) => `
-        <tr>
-          <td>${row.timestamp}</td>
-          <td>${row.page}</td>
-          <td>${row.ip}</td>
-          <td>${row.user_agent}</td>
-        </tr>`,
+      <tr>
+        <td>${row.timestamp}</td>
+        <td>${row.page}</td>
+        <td>${row.ip}</td>
+        <td>${row.user_agent}</td>
+      </tr>
+    `,
       )
       .join("");
 
@@ -83,7 +104,7 @@ app.get("/admin", async (req, res) => {
   }
 });
 
-// 🔍 API des statistiques
+// 📊 API JSON des statistiques
 app.get("/api/stats", async (req, res) => {
   const period = req.query.period || "all";
   let dateCondition = "";
@@ -148,5 +169,5 @@ app.get("/api/stats", async (req, res) => {
 
 // 🚀 Lancer le serveur
 app.listen(PORT, () => {
-  console.log(`✅ Serveur lancé sur http://localhost:${PORT}`);
+  console.log(`✅ Serveur lancé sur le port ${PORT}`);
 });
